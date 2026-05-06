@@ -1,32 +1,39 @@
-import type { Metadata } from 'next'
-import { Sintony} from 'next/font/google'
-import './globals.css'
-import { Navbar } from '@/components/layout/navbar'
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import './globals.css';
+import { Navbar } from '@/components/layout/navbar';
+import { Providers } from '@/components/providers/providers';
 
-const sintony = Sintony({ 
-  weight: ['400', '700'],
+const inter = Inter({
   subsets: ['latin'],
-  variable: '--font-sintony', 
-})
+  variable: '--font-inter',
+});
 
 export const metadata: Metadata = {
-  title: 'Artisea – Thoughtful Writing',
-  description: 'Discover and share thoughtful stories from a community of curious minds.',
-}
+  title: 'Artisea – Discover & Connect',
+  description:
+    'A social digital publishing platform where curious minds share thoughtful stories and build communities.',
+  keywords: ['writing', 'publishing', 'social media', 'stories', 'community'],
+};
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${sintony.className} antialiased bg-zinc-50 dark:bg-zinc-950`}>
-        <Navbar />
-        <main className='container mx-auto p4 md:p-8'>
-          {children}  
-        </main>
+    <html lang="en" suppressHydrationWarning>
+      <body
+        className={`${inter.variable} font-sans antialiased bg-zinc-50 dark:bg-zinc-950`}
+      >
+        <Providers>
+          <div className="flex min-h-screen flex-col">
+            <Navbar />
+            <main className="flex-1">{children}</main>
+          </div>
+        </Providers>
       </body>
     </html>
-  )
+  );
 }
+

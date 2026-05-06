@@ -1,10 +1,8 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Button } from "@/components/ui/button"
-import { ButtonGroup } from "@/components/ui/button-group"
-import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { Search } from 'lucide-react'
 import { cn } from "@/lib/utils" // standard shadcn utility for merging classes
 
 interface SearchBarProps extends React.FormHTMLAttributes<HTMLFormElement> {
@@ -38,22 +36,18 @@ export function SearchBar({
   return (
     // The cn() function merges the default width with any custom className you pass in
     <form onSubmit={handleSubmit} className={cn("w-full max-w-sm", className)} {...props}>
-      <Field>
-        {/* Only render the label if one is provided */}
-        {label && <FieldLabel htmlFor={inputId}>{label}</FieldLabel>}
-        
-        <ButtonGroup>
-          <Input 
-            id={inputId} 
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={placeholder} 
-          />
-          <Button type="submit" variant="outline">
-            {buttonText}
-          </Button>
-        </ButtonGroup>
-      </Field>
+      <div className="relative group">
+        <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+          <Search className="h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-foreground" />
+        </div>
+        <Input 
+          id={inputId} 
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={placeholder}
+          className="pl-9 bg-muted/50 border-transparent focus-visible:bg-background focus-visible:ring-1 focus-visible:ring-ring transition-all rounded-xl"
+        />
+      </div>
     </form>
   )
 }

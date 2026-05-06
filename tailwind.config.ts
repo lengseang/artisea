@@ -7,10 +7,12 @@ const config: Config = {
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       fontFamily: {
         sans: ["var(--font-sintony)", ...defaultTheme.fontFamily.sans],
+        serif: ["var(--font-playfair)", "Georgia", ...defaultTheme.fontFamily.serif],
       },
     },
   },
