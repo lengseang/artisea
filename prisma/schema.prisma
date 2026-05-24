@@ -1,0 +1,62 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum ArticleStatus {
+  draft
+  ready_to_publish
+  published
+  archived
+  under_review
+}
+
+enum ArticleVisibility {
+  public
+  unlisted
+  private
+}
+
+model Article {
+  id                String            @id @default(uuid())
+  author_id         String
+  agent_id          String?
+  title             String
+  slug              String            @unique
+  excerpt           String?           @db.Text
+  content           Json?             // Holds the rich Tiptap JSON document structure
+  content_text      String?           @db.Text // Holds the plain text version of the content
+  cover_image       String?
+  status            ArticleStatus     @default(draft)
+  visibility        ArticleVisibility @default(public)
+  is_verified       Boolean           @default(false)
+  verified_at       DateTime?
+  published_at      DateTime?
+  read_time_minutes Int               @default(0)
+  tags              String[]          @default([])
+  created_at        DateTime          @default(now())
+  updated_at        DateTime          @updatedAt
+  auto_saved_at     DateTime?
+
+  // 1:1 relation with stats for counting
+  stats             ArticleStats?
+
+  // Search vector field managed by raw DB trigger
+  search_vector     Unsupported("tsvector")?
+
+  @@index([search_vector], type: Gin)
+}
+
+model ArticleStats {
+  id            String   @id @default(uuid())
+  article_id    String   @unique
+  article       Article  @relation(fields: [article_id], references: [id], onDelete: Cascade)
+  view_count    Int      @default(0)
+  like_count    Int      @default(0)
+  comment_count Int      @default(0)
+  save_count    Int      @default(0)
+  share_count   Int      @default(0)
+}

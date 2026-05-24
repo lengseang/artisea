@@ -66,8 +66,10 @@ export async function apiClient<T>(
 
   const headers = new Headers(init.headers);
 
-  // Default content type for JSON payloads
-  if (body && !headers.has('Content-Type')) {
+  const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
+
+  // Default content type for JSON payloads. Let the browser set multipart boundaries.
+  if (body && !isFormData && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
   }
 
@@ -85,9 +87,10 @@ export async function apiClient<T>(
 
   try {
     const response = await fetch(`${BASE_URL}${endpoint}`, {
+      cache: 'no-store',
       ...init,
       headers,
-      body: body ? JSON.stringify(body) : undefined,
+      body: isFormData ? body : body ? JSON.stringify(body) : undefined,
       signal: controller.signal,
     });
 
@@ -98,13 +101,14 @@ export async function apiClient<T>(
       return undefined as T;
     }
 
-    const data = await response.json();
+    const text = await response.text();
+    const data = text ? JSON.parse(text) : undefined;
 
     if (!response.ok) {
       throw new ApiClientError({
         status: response.status,
-        message: data.message ?? 'An unexpected error occurred',
-        errors: data.errors,
+        message: data?.message ?? 'An unexpected error occurred',
+        errors: data?.errors,
       });
     }
 

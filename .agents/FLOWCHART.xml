@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-05-06" version="21.0.0">
+  <diagram name="ArtiSea Flows" id="artisea-flows">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root><mxCell id="0"/><mxCell id="1" parent="0"/>
+
+<!-- TITLE -->
+<mxCell id="t1" value="ArtiSea — System Process Flows" style="text;html=1;fontSize=20;fontStyle=1;fillColor=none;strokeColor=none;fontColor=#1e293b;" vertex="1" parent="1"><mxGeometry x="20" y="10" width="500" height="40" as="geometry"/></mxCell>
+
+<!-- ===== FLOW 1: AUTH ===== -->
+<mxCell id="a0" value="1. Authentication &amp; Identity" style="swimlane;fillColor=#dbeafe;strokeColor=#3b82f6;fontStyle=1;fontSize=13;" vertex="1" parent="1"><mxGeometry x="20" y="60" width="620" height="200" as="geometry"/></mxCell>
+<mxCell id="a1" value="Start" style="ellipse;fillColor=#1d4ed8;fontColor=#ffffff;strokeColor=#1e40af;fontStyle=1;" vertex="1" parent="a0"><mxGeometry x="20" y="80" width="80" height="40" as="geometry"/></mxCell>
+<mxCell id="a2" value="Register" style="rounded=1;fillColor=#3b82f6;fontColor=#ffffff;strokeColor=#2563eb;" vertex="1" parent="a0"><mxGeometry x="120" y="80" width="100" height="40" as="geometry"/></mxCell>
+<mxCell id="a3" value="Valid?" style="rhombus;fillColor=#60a5fa;fontColor=#1e3a8a;strokeColor=#3b82f6;" vertex="1" parent="a0"><mxGeometry x="240" y="65" width="80" height="60" as="geometry"/></mxCell>
+<mxCell id="a4" value="Create User &amp; Profile" style="rounded=1;fillColor=#3b82f6;fontColor=#ffffff;strokeColor=#2563eb;" vertex="1" parent="a0"><mxGeometry x="340" y="80" width="120" height="40" as="geometry"/></mxCell>
+<mxCell id="a5" value="Issue JWT" style="rounded=1;fillColor=#1d4ed8;fontColor=#ffffff;strokeColor=#1e40af;" vertex="1" parent="a0"><mxGeometry x="480" y="80" width="100" height="40" as="geometry"/></mxCell>
+<mxCell id="a6" value="Dashboard" style="rounded=1;fillColor=#0f172a;fontColor=#ffffff;strokeColor=#1e293b;" vertex="1" parent="a0"><mxGeometry x="480" y="140" width="100" height="40" as="geometry"/></mxCell>
+<mxCell id="ae1" edge="1" source="a1" target="a2" parent="a0"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="ae2" edge="1" source="a2" target="a3" parent="a0"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="ae3" value="No" edge="1" source="a3" target="a2" parent="a0"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="280" y="50"/><mxPoint x="170" y="50"/></Array></mxGeometry></mxCell>
+<mxCell id="ae4" value="Yes" edge="1" source="a3" target="a4" parent="a0"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="ae5" edge="1" source="a4" target="a5" parent="a0"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="ae6" edge="1" source="a5" target="a6" parent="a0"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+<!-- ===== FLOW 2: ARTICLE LIFECYCLE ===== -->
+<mxCell id="b0" value="2. Article Lifecycle" style="swimlane;fillColor=#dcfce7;strokeColor=#22c55e;fontStyle=1;fontSize=13;" vertex="1" parent="1"><mxGeometry x="20" y="280" width="700" height="220" as="geometry"/></mxCell>
+<mxCell id="b1" value="Write Start" style="ellipse;fillColor=#16a34a;fontColor=#ffffff;strokeColor=#15803d;fontStyle=1;" vertex="1" parent="b0"><mxGeometry x="20" y="90" width="90" height="40" as="geometry"/></mxCell>
+<mxCell id="b2" value="Editor" style="rounded=1;fillColor=#22c55e;fontColor=#ffffff;strokeColor=#16a34a;" vertex="1" parent="b0"><mxGeometry x="130" y="90" width="90" height="40" as="geometry"/></mxCell>
+<mxCell id="b3" value="Auto-save Draft" style="rounded=1;fillColor=#86efac;fontColor=#14532d;strokeColor=#22c55e;" vertex="1" parent="b0"><mxGeometry x="130" y="155" width="90" height="35" as="geometry"/></mxCell>
+<mxCell id="b4" value="Insert Media" style="rounded=1;fillColor=#86efac;fontColor=#14532d;strokeColor=#22c55e;" vertex="1" parent="b0"><mxGeometry x="240" y="50" width="90" height="35" as="geometry"/></mxCell>
+<mxCell id="b5" value="Cloud Storage" style="rounded=1;fillColor=#16a34a;fontColor=#ffffff;strokeColor=#15803d;" vertex="1" parent="b0"><mxGeometry x="350" y="50" width="90" height="35" as="geometry"/></mxCell>
+<mxCell id="b6" value="Settings\n(Tags/Visibility)" style="rounded=1;fillColor=#22c55e;fontColor=#ffffff;strokeColor=#16a34a;" vertex="1" parent="b0"><mxGeometry x="240" y="90" width="100" height="40" as="geometry"/></mxCell>
+<mxCell id="b7" value="Publish?" style="rhombus;fillColor=#4ade80;fontColor=#14532d;strokeColor=#22c55e;" vertex="1" parent="b0"><mxGeometry x="360" y="80" width="90" height="60" as="geometry"/></mxCell>
+<mxCell id="b8" value="Set: Published" style="rounded=1;fillColor=#15803d;fontColor=#ffffff;strokeColor=#14532d;" vertex="1" parent="b0"><mxGeometry x="470" y="90" width="100" height="40" as="geometry"/></mxCell>
+<mxCell id="b9" value="Appear in Feeds" style="rounded=1;fillColor=#0f172a;fontColor=#ffffff;strokeColor=#1e293b;" vertex="1" parent="b0"><mxGeometry x="590" y="90" width="90" height="40" as="geometry"/></mxCell>
+<mxCell id="be1" edge="1" source="b1" target="b2" parent="b0"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="be2" edge="1" source="b2" target="b3" parent="b0"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="be3" edge="1" source="b2" target="b4" parent="b0"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="be4" edge="1" source="b4" target="b5" parent="b0"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="be5" edge="1" source="b5" target="b2" parent="b0"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="395" y="30"/><mxPoint x="175" y="30"/></Array></mxGeometry></mxCell>
+<mxCell id="be6" edge="1" source="b2" target="b6" parent="b0"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="be7" edge="1" source="b6" target="b7" parent="b0"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="be8" value="No" edge="1" source="b7" target="b2" parent="b0"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="405" y="170"/><mxPoint x="175" y="170"/></Array></mxGeometry></mxCell>
+<mxCell id="be9" value="Yes" edge="1" source="b7" target="b8" parent="b0"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="be10" edge="1" source="b8" target="b9" parent="b0"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+<!-- ===== FLOW 3: DISCOVERY & INTERACTION ===== -->
+<mxCell id="c0" value="3. Discovery &amp; Community Interaction" style="swimlane;fillColor=#fef9c3;strokeColor=#eab308;fontStyle=1;fontSize=13;" vertex="1" parent="1"><mxGeometry x="20" y="520" width="720" height="230" as="geometry"/></mxCell>
+<mxCell id="c1" value="User" style="ellipse;fillColor=#ca8a04;fontColor=#ffffff;strokeColor=#a16207;fontStyle=1;" vertex="1" parent="c0"><mxGeometry x="20" y="95" width="70" height="40" as="geometry"/></mxCell>
+<mxCell id="c2" value="Home Feed" style="rounded=1;fillColor=#eab308;fontColor=#ffffff;strokeColor=#ca8a04;" vertex="1" parent="c0"><mxGeometry x="110" y="95" width="90" height="40" as="geometry"/></mxCell>
+<mxCell id="c3" value="Best" style="rounded=1;fillColor=#fde047;fontColor=#713f12;strokeColor=#eab308;" vertex="1" parent="c0"><mxGeometry x="220" y="50" width="70" height="35" as="geometry"/></mxCell>
+<mxCell id="c4" value="Hot" style="rounded=1;fillColor=#fde047;fontColor=#713f12;strokeColor=#eab308;" vertex="1" parent="c0"><mxGeometry x="220" y="92" width="70" height="35" as="geometry"/></mxCell>
+<mxCell id="c5" value="New" style="rounded=1;fillColor=#fde047;fontColor=#713f12;strokeColor=#eab308;" vertex="1" parent="c0"><mxGeometry x="220" y="133" width="70" height="35" as="geometry"/></mxCell>
+<mxCell id="c6" value="Top" style="rounded=1;fillColor=#fde047;fontColor=#713f12;strokeColor=#eab308;" vertex="1" parent="c0"><mxGeometry x="220" y="174" width="70" height="35" as="geometry"/></mxCell>
+<mxCell id="c7" value="Article Card" style="rounded=1;fillColor=#eab308;fontColor=#ffffff;strokeColor=#ca8a04;" vertex="1" parent="c0"><mxGeometry x="320" y="100" width="90" height="40" as="geometry"/></mxCell>
+<mxCell id="c8" value="Read" style="rounded=1;fillColor=#ca8a04;fontColor=#ffffff;strokeColor=#a16207;" vertex="1" parent="c0"><mxGeometry x="430" y="100" width="80" height="40" as="geometry"/></mxCell>
+<mxCell id="c9" value="Like" style="rounded=1;fillColor=#fde047;fontColor=#713f12;strokeColor=#eab308;" vertex="1" parent="c0"><mxGeometry x="540" y="50" width="80" height="35" as="geometry"/></mxCell>
+<mxCell id="c10" value="Comment" style="rounded=1;fillColor=#fde047;fontColor=#713f12;strokeColor=#eab308;" vertex="1" parent="c0"><mxGeometry x="540" y="92" width="80" height="35" as="geometry"/></mxCell>
+<mxCell id="c11" value="Save" style="rounded=1;fillColor=#fde047;fontColor=#713f12;strokeColor=#eab308;" vertex="1" parent="c0"><mxGeometry x="540" y="134" width="80" height="35" as="geometry"/></mxCell>
+<mxCell id="c12" value="Follow Author" style="rounded=1;fillColor=#0f172a;fontColor=#ffffff;strokeColor=#1e293b;" vertex="1" parent="c0"><mxGeometry x="540" y="174" width="80" height="35" as="geometry"/></mxCell>
+<mxCell id="ce1" edge="1" source="c1" target="c2" parent="c0"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="ce2" edge="1" source="c2" target="c3" parent="c0"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="ce3" edge="1" source="c2" target="c4" parent="c0"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="ce4" edge="1" source="c2" target="c5" parent="c0"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="ce5" edge="1" source="c2" target="c6" parent="c0"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="ce6" edge="1" source="c3" target="c7" parent="c0"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="ce7" edge="1" source="c4" target="c7" parent="c0"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="ce8" edge="1" source="c5" target="c7" parent="c0"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="ce9" edge="1" source="c6" target="c7" parent="c0"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="ce10" edge="1" source="c7" target="c8" parent="c0"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="ce11" edge="1" source="c8" target="c9" parent="c0"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="ce12" edge="1" source="c8" target="c10" parent="c0"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="ce13" edge="1" source="c8" target="c11" parent="c0"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="ce14" edge="1" source="c8" target="c12" parent="c0"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+<!-- ===== FLOW 4: AGENT-OWNER ===== -->
+<mxCell id="d0" value="4. Agent-Owner Workflow" style="swimlane;fillColor=#fce7f3;strokeColor=#ec4899;fontStyle=1;fontSize=13;" vertex="1" parent="1"><mxGeometry x="20" y="770" width="660" height="180" as="geometry"/></mxCell>
+<mxCell id="d1" value="Agent" style="ellipse;fillColor=#be185d;fontColor=#ffffff;strokeColor=#9d174d;fontStyle=1;" vertex="1" parent="d0"><mxGeometry x="20" y="75" width="80" height="40" as="geometry"/></mxCell>
+<mxCell id="d2" value="Agent Dashboard" style="rounded=1;fillColor=#ec4899;fontColor=#ffffff;strokeColor=#be185d;" vertex="1" parent="d0"><mxGeometry x="120" y="75" width="120" height="40" as="geometry"/></mxCell>
+<mxCell id="d3" value="Select Owner" style="rounded=1;fillColor=#f9a8d4;fontColor=#831843;strokeColor=#ec4899;" vertex="1" parent="d0"><mxGeometry x="260" y="75" width="100" height="40" as="geometry"/></mxCell>
+<mxCell id="d4" value="Write on\nbehalf of Owner" style="rounded=1;fillColor=#ec4899;fontColor=#ffffff;strokeColor=#be185d;" vertex="1" parent="d0"><mxGeometry x="380" y="75" width="100" height="40" as="geometry"/></mxCell>
+<mxCell id="d5" value="Verify &amp; Publish" style="rounded=1;fillColor=#be185d;fontColor=#ffffff;strokeColor=#9d174d;" vertex="1" parent="d0"><mxGeometry x="500" y="75" width="120" height="40" as="geometry"/></mxCell>
+<mxCell id="de1" edge="1" source="d1" target="d2" parent="d0"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="de2" edge="1" source="d2" target="d3" parent="d0"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="de3" edge="1" source="d3" target="d4" parent="d0"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="de4" edge="1" source="d4" target="d5" parent="d0"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+<!-- ===== FLOW 5: LIBRARY ===== -->
+<mxCell id="e0" value="5. Library &amp; Content Management" style="swimlane;fillColor=#f3e8ff;strokeColor=#a855f7;fontStyle=1;fontSize=13;" vertex="1" parent="1"><mxGeometry x="20" y="970" width="600" height="180" as="geometry"/></mxCell>
+<mxCell id="e1" value="Library" style="ellipse;fillColor=#7e22ce;fontColor=#ffffff;strokeColor=#6b21a8;fontStyle=1;" vertex="1" parent="e0"><mxGeometry x="20" y="75" width="90" height="40" as="geometry"/></mxCell>
+<mxCell id="e2" value="My Publications" style="rounded=1;fillColor=#a855f7;fontColor=#ffffff;strokeColor=#7e22ce;" vertex="1" parent="e0"><mxGeometry x="130" y="40" width="110" height="40" as="geometry"/></mxCell>
+<mxCell id="e3" value="Drafts" style="rounded=1;fillColor=#a855f7;fontColor=#ffffff;strokeColor=#7e22ce;" vertex="1" parent="e0"><mxGeometry x="130" y="90" width="110" height="40" as="geometry"/></mxCell>
+<mxCell id="e4" value="Saved Bookmarks" style="rounded=1;fillColor=#a855f7;fontColor=#ffffff;strokeColor=#7e22ce;" vertex="1" parent="e0"><mxGeometry x="130" y="140" width="110" height="30" as="geometry"/></mxCell>
+<mxCell id="e5" value="View Stats /\nEdit / Archive" style="rounded=1;fillColor=#d8b4fe;fontColor=#4c1d95;strokeColor=#a855f7;" vertex="1" parent="e0"><mxGeometry x="270" y="40" width="100" height="40" as="geometry"/></mxCell>
+<mxCell id="e6" value="Continue Writing" style="rounded=1;fillColor=#d8b4fe;fontColor=#4c1d95;strokeColor=#a855f7;" vertex="1" parent="e0"><mxGeometry x="270" y="90" width="100" height="40" as="geometry"/></mxCell>
+<mxCell id="e7" value="Organize Folders" style="rounded=1;fillColor=#0f172a;fontColor=#ffffff;strokeColor=#1e293b;" vertex="1" parent="e0"><mxGeometry x="270" y="140" width="100" height="30" as="geometry"/></mxCell>
+<mxCell id="ee1" edge="1" source="e1" target="e2" parent="e0"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="ee2" edge="1" source="e1" target="e3" parent="e0"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="ee3" edge="1" source="e1" target="e4" parent="e0"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="ee4" edge="1" source="e2" target="e5" parent="e0"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="ee5" edge="1" source="e3" target="e6" parent="e0"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="ee6" edge="1" source="e4" target="e7" parent="e0"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

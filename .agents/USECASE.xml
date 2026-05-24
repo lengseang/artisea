@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" version="21.0.0">
+  <diagram name="ArtiSea Use Case Diagram" id="artisea-usecase">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- TITLE -->
+        <mxCell id="title" value="ArtiSea — Use Case Diagram" style="text;html=1;fontSize=22;fontStyle=1;fillColor=none;strokeColor=none;fontColor=#0f172a;align=center;" vertex="1" parent="1"><mxGeometry x="400" y="20" width="500" height="40" as="geometry"/></mxCell>
+        <mxCell id="subtitle" value="Defines what each user role can perform within the ArtiSea platform." style="text;html=1;fontSize=12;fillColor=none;strokeColor=none;fontColor=#64748b;align=center;" vertex="1" parent="1"><mxGeometry x="400" y="55" width="500" height="25" as="geometry"/></mxCell>
+
+        <!-- ======= SYSTEM BOUNDARY ======= -->
+        <mxCell id="sys" value="ArtiSea Platform" style="swimlane;startSize=30;fillColor=#f8fafc;strokeColor=#94a3b8;fontStyle=1;fontSize=14;fontColor=#0f172a;swimlaneLine=1;horizontal=1;" vertex="1" parent="1"><mxGeometry x="230" y="90" width="900" height="980" as="geometry"/></mxCell>
+
+        <!-- ======= ACTORS ======= -->
+        <!-- Reader -->
+        <mxCell id="actor_reader" value="Reader" style="shape=mxgraph.uml.actor;whiteSpace=wrap;html=1;fillColor=#dbeafe;strokeColor=#3b82f6;fontStyle=1;fontSize=12;" vertex="1" parent="1"><mxGeometry x="50" y="200" width="50" height="80" as="geometry"/></mxCell>
+        <!-- Author -->
+        <mxCell id="actor_author" value="Author" style="shape=mxgraph.uml.actor;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#22c55e;fontStyle=1;fontSize=12;" vertex="1" parent="1"><mxGeometry x="50" y="450" width="50" height="80" as="geometry"/></mxCell>
+        <!-- Agent -->
+        <mxCell id="actor_agent" value="Agent" style="shape=mxgraph.uml.actor;whiteSpace=wrap;html=1;fillColor=#fce7f3;strokeColor=#ec4899;fontStyle=1;fontSize=12;" vertex="1" parent="1"><mxGeometry x="50" y="700" width="50" height="80" as="geometry"/></mxCell>
+        <!-- Admin -->
+        <mxCell id="actor_admin" value="Admin" style="shape=mxgraph.uml.actor;whiteSpace=wrap;html=1;fillColor=#f3e8ff;strokeColor=#a855f7;fontStyle=1;fontSize=12;" vertex="1" parent="1"><mxGeometry x="1210" y="500" width="50" height="80" as="geometry"/></mxCell>
+
+        <!-- ======= SECTION LABELS ======= -->
+        <mxCell id="lbl1" value="Identity &amp; Access" style="text;html=1;fontSize=10;fontStyle=3;fillColor=none;strokeColor=none;fontColor=#64748b;" vertex="1" parent="sys"><mxGeometry x="20" y="30" width="140" height="20" as="geometry"/></mxCell>
+        <mxCell id="lbl2" value="Article Features" style="text;html=1;fontSize=10;fontStyle=3;fillColor=none;strokeColor=none;fontColor=#64748b;" vertex="1" parent="sys"><mxGeometry x="320" y="30" width="140" height="20" as="geometry"/></mxCell>
+        <mxCell id="lbl3" value="Social &amp; Discovery" style="text;html=1;fontSize=10;fontStyle=3;fillColor=none;strokeColor=none;fontColor=#64748b;" vertex="1" parent="sys"><mxGeometry x="600" y="30" width="140" height="20" as="geometry"/></mxCell>
+        <mxCell id="lbl4" value="Agent Operations" style="text;html=1;fontSize=10;fontStyle=3;fillColor=none;strokeColor=none;fontColor=#64748b;" vertex="1" parent="sys"><mxGeometry x="20" y="570" width="140" height="20" as="geometry"/></mxCell>
+        <mxCell id="lbl5" value="Admin Operations" style="text;html=1;fontSize=10;fontStyle=3;fillColor=none;strokeColor=none;fontColor=#64748b;" vertex="1" parent="sys"><mxGeometry x="600" y="570" width="140" height="20" as="geometry"/></mxCell>
+
+        <!-- ======= IDENTITY USE CASES ======= -->
+        <mxCell id="uc_register" value="Register Account" style="ellipse;fillColor=#dbeafe;strokeColor=#3b82f6;fontColor=#1e3a8a;" vertex="1" parent="sys"><mxGeometry x="30" y="80" width="160" height="45" as="geometry"/></mxCell>
+        <mxCell id="uc_login" value="Login" style="ellipse;fillColor=#dbeafe;strokeColor=#3b82f6;fontColor=#1e3a8a;" vertex="1" parent="sys"><mxGeometry x="30" y="145" width="160" height="45" as="geometry"/></mxCell>
+        <mxCell id="uc_profile" value="Manage Profile" style="ellipse;fillColor=#dbeafe;strokeColor=#3b82f6;fontColor=#1e3a8a;" vertex="1" parent="sys"><mxGeometry x="30" y="210" width="160" height="45" as="geometry"/></mxCell>
+        <mxCell id="uc_notif" value="View Notifications" style="ellipse;fillColor=#dbeafe;strokeColor=#3b82f6;fontColor=#1e3a8a;" vertex="1" parent="sys"><mxGeometry x="30" y="275" width="160" height="45" as="geometry"/></mxCell>
+
+        <!-- ======= ARTICLE USE CASES ======= -->
+        <mxCell id="uc_browse" value="Browse Article Feed" style="ellipse;fillColor=#dcfce7;strokeColor=#22c55e;fontColor=#14532d;" vertex="1" parent="sys"><mxGeometry x="280" y="80" width="170" height="45" as="geometry"/></mxCell>
+        <mxCell id="uc_read" value="Read Article" style="ellipse;fillColor=#dcfce7;strokeColor=#22c55e;fontColor=#14532d;" vertex="1" parent="sys"><mxGeometry x="280" y="145" width="170" height="45" as="geometry"/></mxCell>
+        <mxCell id="uc_search" value="Search / Filter / Sort" style="ellipse;fillColor=#dcfce7;strokeColor=#22c55e;fontColor=#14532d;" vertex="1" parent="sys"><mxGeometry x="280" y="210" width="170" height="45" as="geometry"/></mxCell>
+        <mxCell id="uc_write" value="Write Article" style="ellipse;fillColor=#dcfce7;strokeColor=#22c55e;fontColor=#14532d;" vertex="1" parent="sys"><mxGeometry x="280" y="275" width="170" height="45" as="geometry"/></mxCell>
+        <mxCell id="uc_autosave" value="Auto-save Draft" style="ellipse;fillColor=#dcfce7;strokeColor=#22c55e;fontColor=#14532d;" vertex="1" parent="sys"><mxGeometry x="280" y="340" width="170" height="45" as="geometry"/></mxCell>
+        <mxCell id="uc_publish" value="Publish Article" style="ellipse;fillColor=#dcfce7;strokeColor=#22c55e;fontColor=#14532d;" vertex="1" parent="sys"><mxGeometry x="280" y="405" width="170" height="45" as="geometry"/></mxCell>
+        <mxCell id="uc_library" value="Manage Library" style="ellipse;fillColor=#dcfce7;strokeColor=#22c55e;fontColor=#14532d;" vertex="1" parent="sys"><mxGeometry x="280" y="470" width="170" height="45" as="geometry"/></mxCell>
+
+        <!-- ======= SOCIAL USE CASES ======= -->
+        <mxCell id="uc_like" value="Like Article" style="ellipse;fillColor=#fef9c3;strokeColor=#eab308;fontColor=#713f12;" vertex="1" parent="sys"><mxGeometry x="550" y="80" width="160" height="45" as="geometry"/></mxCell>
+        <mxCell id="uc_comment" value="Comment on Article" style="ellipse;fillColor=#fef9c3;strokeColor=#eab308;fontColor=#713f12;" vertex="1" parent="sys"><mxGeometry x="550" y="145" width="160" height="45" as="geometry"/></mxCell>
+        <mxCell id="uc_share" value="Share Article" style="ellipse;fillColor=#fef9c3;strokeColor=#eab308;fontColor=#713f12;" vertex="1" parent="sys"><mxGeometry x="550" y="210" width="160" height="45" as="geometry"/></mxCell>
+        <mxCell id="uc_save" value="Save to Library" style="ellipse;fillColor=#fef9c3;strokeColor=#eab308;fontColor=#713f12;" vertex="1" parent="sys"><mxGeometry x="550" y="275" width="160" height="45" as="geometry"/></mxCell>
+        <mxCell id="uc_follow" value="Follow Author" style="ellipse;fillColor=#fef9c3;strokeColor=#eab308;fontColor=#713f12;" vertex="1" parent="sys"><mxGeometry x="550" y="340" width="160" height="45" as="geometry"/></mxCell>
+        <mxCell id="uc_browseauth" value="Browse Authors" style="ellipse;fillColor=#fef9c3;strokeColor=#eab308;fontColor=#713f12;" vertex="1" parent="sys"><mxGeometry x="550" y="405" width="160" height="45" as="geometry"/></mxCell>
+        <mxCell id="uc_folders" value="Organize Folders" style="ellipse;fillColor=#fef9c3;strokeColor=#eab308;fontColor=#713f12;" vertex="1" parent="sys"><mxGeometry x="550" y="470" width="160" height="45" as="geometry"/></mxCell>
+
+        <!-- ======= AGENT USE CASES ======= -->
+        <mxCell id="uc_manageowners" value="Manage Owner Assignments" style="ellipse;fillColor=#fce7f3;strokeColor=#ec4899;fontColor=#831843;" vertex="1" parent="sys"><mxGeometry x="30" y="620" width="190" height="45" as="geometry"/></mxCell>
+        <mxCell id="uc_proxy" value="Publish on Behalf of Owner" style="ellipse;fillColor=#fce7f3;strokeColor=#ec4899;fontColor=#831843;" vertex="1" parent="sys"><mxGeometry x="30" y="685" width="190" height="45" as="geometry"/></mxCell>
+        <mxCell id="uc_agentdash" value="Agent Dashboard View" style="ellipse;fillColor=#fce7f3;strokeColor=#ec4899;fontColor=#831843;" vertex="1" parent="sys"><mxGeometry x="30" y="750" width="190" height="45" as="geometry"/></mxCell>
+
+        <!-- ======= ADMIN USE CASES ======= -->
+        <mxCell id="uc_verifycontent" value="Verify Content Listing" style="ellipse;fillColor=#f3e8ff;strokeColor=#a855f7;fontColor=#4c1d95;" vertex="1" parent="sys"><mxGeometry x="620" y="620" width="185" height="45" as="geometry"/></mxCell>
+        <mxCell id="uc_verifyagent" value="Verify Agent Account" style="ellipse;fillColor=#f3e8ff;strokeColor=#a855f7;fontColor=#4c1d95;" vertex="1" parent="sys"><mxGeometry x="620" y="685" width="185" height="45" as="geometry"/></mxCell>
+        <mxCell id="uc_verifyowner" value="Verify Owner Identity" style="ellipse;fillColor=#f3e8ff;strokeColor=#a855f7;fontColor=#4c1d95;" vertex="1" parent="sys"><mxGeometry x="620" y="750" width="185" height="45" as="geometry"/></mxCell>
+        <mxCell id="uc_suspend" value="Suspend / Deactivate User" style="ellipse;fillColor=#f3e8ff;strokeColor=#a855f7;fontColor=#4c1d95;" vertex="1" parent="sys"><mxGeometry x="620" y="815" width="185" height="45" as="geometry"/></mxCell>
+
+        <!-- ======= READER CONNECTIONS ======= -->
+        <mxCell id="r_reg" edge="1" source="actor_reader" target="uc_register" parent="1" style="exitX=1;exitY=0.3;entryX=0;entryY=0.5;strokeColor=#3b82f6;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="r_log" edge="1" source="actor_reader" target="uc_login" parent="1" style="strokeColor=#3b82f6;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="r_pro" edge="1" source="actor_reader" target="uc_profile" parent="1" style="strokeColor=#3b82f6;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="r_not" edge="1" source="actor_reader" target="uc_notif" parent="1" style="strokeColor=#3b82f6;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="r_bro" edge="1" source="actor_reader" target="uc_browse" parent="1" style="strokeColor=#3b82f6;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="r_rea" edge="1" source="actor_reader" target="uc_read" parent="1" style="strokeColor=#3b82f6;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="r_sea" edge="1" source="actor_reader" target="uc_search" parent="1" style="strokeColor=#3b82f6;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="r_lik" edge="1" source="actor_reader" target="uc_like" parent="1" style="strokeColor=#3b82f6;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="r_com" edge="1" source="actor_reader" target="uc_comment" parent="1" style="strokeColor=#3b82f6;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="r_sha" edge="1" source="actor_reader" target="uc_share" parent="1" style="strokeColor=#3b82f6;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="r_sav" edge="1" source="actor_reader" target="uc_save" parent="1" style="strokeColor=#3b82f6;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="r_fol" edge="1" source="actor_reader" target="uc_follow" parent="1" style="strokeColor=#3b82f6;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="r_bau" edge="1" source="actor_reader" target="uc_browseauth" parent="1" style="strokeColor=#3b82f6;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="r_fld" edge="1" source="actor_reader" target="uc_folders" parent="1" style="strokeColor=#3b82f6;"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- ======= AUTHOR CONNECTIONS ======= -->
+        <mxCell id="au_wri" edge="1" source="actor_author" target="uc_write" parent="1" style="strokeColor=#22c55e;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="au_aut" edge="1" source="actor_author" target="uc_autosave" parent="1" style="strokeColor=#22c55e;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="au_pub" edge="1" source="actor_author" target="uc_publish" parent="1" style="strokeColor=#22c55e;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="au_lib" edge="1" source="actor_author" target="uc_library" parent="1" style="strokeColor=#22c55e;"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- ======= AGENT CONNECTIONS ======= -->
+        <mxCell id="ag_own" edge="1" source="actor_agent" target="uc_manageowners" parent="1" style="strokeColor=#ec4899;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="ag_prx" edge="1" source="actor_agent" target="uc_proxy" parent="1" style="strokeColor=#ec4899;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="ag_dsh" edge="1" source="actor_agent" target="uc_agentdash" parent="1" style="strokeColor=#ec4899;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="ag_wri" edge="1" source="actor_agent" target="uc_write" parent="1" style="strokeColor=#ec4899;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="ag_pub" edge="1" source="actor_agent" target="uc_publish" parent="1" style="strokeColor=#ec4899;"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- ======= ADMIN CONNECTIONS ======= -->
+        <mxCell id="ad_vc" edge="1" source="actor_admin" target="uc_verifycontent" parent="1" style="strokeColor=#a855f7;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="ad_va" edge="1" source="actor_admin" target="uc_verifyagent" parent="1" style="strokeColor=#a855f7;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="ad_vo" edge="1" source="actor_admin" target="uc_verifyowner" parent="1" style="strokeColor=#a855f7;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="ad_su" edge="1" source="actor_admin" target="uc_suspend" parent="1" style="strokeColor=#a855f7;"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- ======= LEGEND ======= -->
+        <mxCell id="legend" value="Legend" style="swimlane;fillColor=#f1f5f9;strokeColor=#94a3b8;fontStyle=1;fontSize=11;startSize=25;" vertex="1" parent="1"><mxGeometry x="1150" y="90" width="160" height="220" as="geometry"/></mxCell>
+        <mxCell id="leg1" value="Reader" style="ellipse;fillColor=#dbeafe;strokeColor=#3b82f6;fontColor=#1e3a8a;fontSize=11;" vertex="1" parent="legend"><mxGeometry x="15" y="35" width="130" height="35" as="geometry"/></mxCell>
+        <mxCell id="leg2" value="Author" style="ellipse;fillColor=#dcfce7;strokeColor=#22c55e;fontColor=#14532d;fontSize=11;" vertex="1" parent="legend"><mxGeometry x="15" y="80" width="130" height="35" as="geometry"/></mxCell>
+        <mxCell id="leg3" value="Agent" style="ellipse;fillColor=#fce7f3;strokeColor=#ec4899;fontColor=#831843;fontSize=11;" vertex="1" parent="legend"><mxGeometry x="15" y="125" width="130" height="35" as="geometry"/></mxCell>
+        <mxCell id="leg4" value="Admin" style="ellipse;fillColor=#f3e8ff;strokeColor=#a855f7;fontColor=#4c1d95;fontSize=11;" vertex="1" parent="legend"><mxGeometry x="15" y="170" width="130" height="35" as="geometry"/></mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

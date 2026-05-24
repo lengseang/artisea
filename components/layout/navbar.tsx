@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -27,7 +27,10 @@ import {
   LogOut,
   Bell,
   ShieldCheck,
+  CheckCheck,
 } from 'lucide-react';
+import { getLatestUserNotifications, markAllNotificationsRead, markNotificationRead } from '@/lib/api/notifications';
+import type { Notification } from '@/types/notification';
 
 
 /* ─── Navigation config ──────────────────────────────────── */
@@ -49,6 +52,40 @@ export function Navbar() {
   const { resolvedTheme, toggleTheme } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const notifRef = useRef<HTMLDivElement>(null);
+
+  const unreadCount = Array.isArray(notifications)
+    ? notifications.filter((n) => !n.is_read).length
+    : 0;
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    getLatestUserNotifications()
+      .then((data) => {
+        setNotifications(Array.isArray(data) ? data : []);
+      })
+      .catch(() => {
+        setNotifications([]);
+      });
+  }, [isAuthenticated]);
+
+  const handleMarkAllRead = async () => {
+    await markAllNotificationsRead().catch(() => undefined);
+    setNotifications((prev) => {
+      const current = Array.isArray(prev) ? prev : [];
+      return current.map((n) => ({ ...n, is_read: true }));
+    });
+  };
+
+  const handleMarkRead = async (id: string) => {
+    await markNotificationRead(id).catch(() => undefined);
+    setNotifications((prev) => {
+      const current = Array.isArray(prev) ? prev : [];
+      return current.map((n) => (n.id === id ? { ...n, is_read: true } : n));
+    });
+  };
 
   const navLinks = [
     ...PUBLIC_LINKS,
@@ -111,14 +148,56 @@ export function Navbar() {
               </Link>
 
               {/* Notifications */}
-              <button
-                className="relative rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                aria-label="Notifications"
-              >
-                <Bell className="h-5 w-5" />
-                {/* Notification dot */}
-                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-pink-500" />
-              </button>
+              <div className="relative" ref={notifRef}>
+                <button
+                  onClick={() => setNotifOpen(!notifOpen)}
+                  className="relative rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  aria-label="Notifications"
+                >
+                  <Bell className="h-5 w-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute right-1 top-1 h-4 w-4 rounded-full bg-pink-500 text-[9px] font-bold text-white flex items-center justify-center">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+
+                {notifOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setNotifOpen(false)} />
+                    <div className="absolute right-0 top-full z-50 mt-2 w-80 rounded-xl border border-border bg-popover shadow-lg ring-1 ring-black/5 animate-in fade-in-0 zoom-in-95 overflow-hidden">
+                      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+                        <p className="text-sm font-semibold">Notifications</p>
+                        {unreadCount > 0 && (
+                          <button onClick={handleMarkAllRead} className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors">
+                            <CheckCheck className="h-3.5 w-3.5" /> Mark all read
+                          </button>
+                        )}
+                      </div>
+                      <div className="max-h-80 overflow-y-auto divide-y divide-border">
+                        {!Array.isArray(notifications) || notifications.length === 0 ? (
+                          <p className="p-6 text-center text-sm text-muted-foreground">No notifications yet</p>
+                        ) : (
+                          notifications.map((n) => (
+                            <button
+                              key={n.id}
+                              onClick={() => { void handleMarkRead(n.id); setNotifOpen(false); }}
+                              className={`w-full text-left px-4 py-3 hover:bg-muted transition-colors flex items-start gap-3 ${!n.is_read ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''}`}
+                            >
+                              {!n.is_read && <span className="mt-1.5 h-2 w-2 rounded-full bg-blue-500 flex-none" />}
+                              {n.is_read && <span className="mt-1.5 h-2 w-2 flex-none" />}
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-foreground truncate capitalize">{n.type.replace(/_/g, ' ')}</p>
+                                {n.message && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.message}</p>}
+                              </div>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
 
               {/* Profile dropdown */}
               <div className="relative">

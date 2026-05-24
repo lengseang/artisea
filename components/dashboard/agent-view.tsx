@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState, type ComponentType, type SVGProps } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/shared/empty-state';
@@ -8,12 +8,16 @@ import {
   Users, 
   FileCheck, 
   ClipboardList, 
+  Bot,
+  Brain,
   ExternalLink, 
   MoreVertical,
   CheckCircle2,
   AlertCircle
 } from 'lucide-react';
 import { Avatar } from '@/components/ui/avatar';
+import { getAdminUsers } from '@/lib/api/admin';
+import type { User } from '@/types/user';
 
 interface ManagedAuthor {
   id: string;
@@ -25,38 +29,45 @@ interface ManagedAuthor {
   last_activity: string;
 }
 
-const MOCK_AUTHORS: ManagedAuthor[] = [
-  {
-    id: 'a1',
-    display_name: 'John Doe',
-    username: 'johndoe',
-    avatar_url: null,
-    article_count: 12,
-    status: 'active',
-    last_activity: '2 hours ago',
-  },
-  {
-    id: 'a2',
-    display_name: 'Jane Smith',
-    username: 'janesmith',
-    avatar_url: null,
-    article_count: 5,
-    status: 'pending',
-    last_activity: '1 day ago',
-  },
-  {
-    id: 'a3',
-    display_name: 'Robert Brown',
-    username: 'rbrown',
-    avatar_url: null,
-    article_count: 28,
-    status: 'active',
-    last_activity: '30 mins ago',
-  },
-];
+function toManagedAuthor(user: User): ManagedAuthor {
+  return {
+    id: user.id,
+    display_name: user.profile?.display_name ?? user.username,
+    username: user.username,
+    avatar_url: user.profile?.avatar_url ?? null,
+    article_count: user.profile?.article_count ?? 0,
+    status:
+      user.status === 'pending_verification'
+        ? 'pending'
+        : user.status === 'active'
+          ? 'active'
+          : 'revoked',
+    last_activity: user.last_login_at ?? user.updated_at ?? user.created_at,
+  };
+}
 
 export function AgentView() {
-  const [authors] = useState<ManagedAuthor[]>(MOCK_AUTHORS);
+  const [authors, setAuthors] = useState<ManagedAuthor[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    getAdminUsers()
+      .then((response) => {
+        setAuthors(response.data.map(toManagedAuthor));
+      })
+      .catch((error) => {
+        setErrorMessage(
+          error instanceof Error
+            ? error.message
+            : 'Unable to load managed users from the API.'
+        );
+      })
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  const pendingCount = authors.filter((author) => author.status === 'pending').length;
+  const activeCount = authors.filter((author) => author.status === 'active').length;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -64,22 +75,22 @@ export function AgentView() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard 
           icon={Users} 
-          label="Assigned Authors" 
-          value={authors.length} 
-          subtext="Managing content for 3 owners"
+          label="Managed Owners" 
+          value={authors.length}
+          subtext="Accounts available for agent-assisted work"
         />
         <StatCard 
           icon={FileCheck} 
-          label="Pending Verification" 
-          value={4} 
-          subtext="Articles requiring review"
+          label="Pending Review" 
+          value={pendingCount}
+          subtext="Items that should stay behind approval gates"
           trend="warning"
         />
         <StatCard 
           icon={ClipboardList} 
-          label="Total Managed" 
-          value={45} 
-          subtext="Articles published across owners"
+          label="Active Owners" 
+          value={activeCount}
+          subtext="Profiles currently ready for execution"
         />
       </div>
 
@@ -88,13 +99,18 @@ export function AgentView() {
         {/* Authors List */}
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">Assigned Authors</h3>
+            <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">Managed Owners</h3>
             <button className="text-sm font-medium text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">
               View All
             </button>
           </div>
 
           <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden shadow-sm">
+            {errorMessage && (
+              <div className="border-b border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-300">
+                {errorMessage}
+              </div>
+            )}
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -107,7 +123,23 @@ export function AgentView() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                  {authors.map((author) => (
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={5} className="px-5 py-8 text-center text-sm text-zinc-500">
+                        Loading users...
+                      </td>
+                    </tr>
+                  ) : authors.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-5 py-8">
+                        <EmptyState
+                          icon={Users}
+                          title="No managed users"
+                          description="The API did not return users for this view."
+                        />
+                      </td>
+                    </tr>
+                  ) : authors.map((author) => (
                     <tr key={author.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors group">
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
@@ -142,30 +174,30 @@ export function AgentView() {
           </div>
         </div>
 
-        {/* Verification Queue (Sidebar) */}
+        {/* Workflow Suggestions (Sidebar) */}
         <div className="space-y-4">
-          <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">Verification Queue</h3>
+          <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">Workflow Suggestions</h3>
           <div className="space-y-3">
-            <VerificationCard 
-              title="The Impact of AI on UX"
-              author="John Doe"
-              time="10 mins ago"
+            <SuggestionCard
+              icon={Bot}
+              title="Add Planner + Executor split"
+              description="Keep task planning separate from article mutations so retries and approvals stay deterministic."
             />
-            <VerificationCard 
-              title="Sustainable Design Patterns"
-              author="Robert Brown"
-              time="45 mins ago"
+            <SuggestionCard
+              icon={Brain}
+              title="Scope memory by owner and article"
+              description="Store tone, prior drafts, and review feedback as task context instead of one shared agent history."
             />
-            <VerificationCard 
-              title="Editorial Ethics 101"
-              author="John Doe"
-              time="2 hours ago"
+            <SuggestionCard
+              icon={FileCheck}
+              title="Require approval before publish"
+              description="Use AI for suggestions and draft generation first, then gate publish and destructive actions behind human review."
               isHighPriority
             />
           </div>
-          <button className="w-full py-3 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 text-sm font-medium text-zinc-500 hover:border-zinc-900 hover:text-zinc-900 dark:hover:border-zinc-100 dark:hover:text-zinc-100 transition-all">
-            View Full Queue
-          </button>
+          <div className="rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 p-4 text-sm text-zinc-500 dark:text-zinc-400">
+            Next backend slice: `planner`, `memory`, `executor`, prompt templates, and `/api/v1/agent/tasks`.
+          </div>
         </div>
       </div>
     </div>
@@ -179,7 +211,7 @@ function StatCard({
   subtext,
   trend = 'default'
 }: { 
-  icon: any, 
+  icon: ComponentType<SVGProps<SVGSVGElement>>, 
   label: string, 
   value: number | string,
   subtext: string,
@@ -211,10 +243,15 @@ function StatCard({
   );
 }
 
-function VerificationCard({ title, author, time, isHighPriority }: { 
-  title: string, 
-  author: string, 
-  time: string,
+function SuggestionCard({
+  icon: Icon,
+  title,
+  description,
+  isHighPriority,
+}: {
+  icon: ComponentType<SVGProps<SVGSVGElement>>;
+  title: string;
+  description: string;
   isHighPriority?: boolean
 }) {
   return (
@@ -229,9 +266,13 @@ function VerificationCard({ title, author, time, isHighPriority }: {
         </h5>
         <ExternalLink className="h-3.5 w-3.5 text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>
-      <div className="flex items-center justify-between mt-2">
-        <p className="text-xs text-zinc-500">by <span className="font-medium text-zinc-700 dark:text-zinc-300">{author}</span></p>
-        <span className="text-[10px] text-zinc-400">{time}</span>
+      <div className="mt-3 flex items-start gap-2">
+        <div className="rounded-lg bg-white/80 p-2 text-zinc-500 shadow-sm dark:bg-zinc-900/70 dark:text-zinc-300">
+          <Icon className="h-3.5 w-3.5" />
+        </div>
+        <p className="text-xs leading-5 text-zinc-500 dark:text-zinc-400">
+          {description}
+        </p>
       </div>
     </div>
   );

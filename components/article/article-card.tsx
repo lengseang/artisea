@@ -109,6 +109,7 @@ export function ArticleCard({ article, className }: Readonly<ArticleCardProps>) 
       {/* Interaction bar */}
       <div className="relative z-10 pl-[52px] pr-8">
         <InteractionBar
+          articleId={article.id}
           likeCount={article.like_count}
           commentCount={article.comment_count}
           saveCount={article.save_count}

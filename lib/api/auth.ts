@@ -4,10 +4,12 @@
  */
 
 import { apiClient, setTokens, clearTokens, getRefreshToken } from '@/lib/api-client';
+import { API_ENDPOINTS } from '@/lib/api/endpoints';
+import { unwrapData } from '@/lib/api/normalizers';
 import type { LoginRequest, RegisterRequest, AuthResponse } from '@/types/api';
 
 export async function login(credentials: LoginRequest): Promise<AuthResponse> {
-  const data = await apiClient<AuthResponse>('/auth/login', {
+  const data = await apiClient<AuthResponse>(API_ENDPOINTS.auth.login, {
     method: 'POST',
     body: credentials,
     public: true,
@@ -17,7 +19,7 @@ export async function login(credentials: LoginRequest): Promise<AuthResponse> {
 }
 
 export async function register(payload: RegisterRequest): Promise<AuthResponse> {
-  const data = await apiClient<AuthResponse>('/auth/register', {
+  const data = await apiClient<AuthResponse>(API_ENDPOINTS.auth.register, {
     method: 'POST',
     body: payload,
     public: true,
@@ -31,7 +33,7 @@ export async function refreshAccessToken(): Promise<AuthResponse | null> {
   if (!refreshToken) return null;
 
   try {
-    const data = await apiClient<AuthResponse>('/auth/refresh', {
+    const data = await apiClient<AuthResponse>(API_ENDPOINTS.auth.refresh, {
       method: 'POST',
       body: { refresh_token: refreshToken },
       public: true,
@@ -44,6 +46,19 @@ export async function refreshAccessToken(): Promise<AuthResponse | null> {
   }
 }
 
-export function logout(): void {
+export async function getCurrentUser(): Promise<AuthResponse['user']> {
+  const data = await apiClient<unknown>(API_ENDPOINTS.auth.me);
+  return unwrapData<AuthResponse['user']>(data);
+}
+
+export async function logout(): Promise<void> {
+  try {
+    await apiClient<void>(API_ENDPOINTS.auth.logout, { method: 'POST' });
+  } finally {
+    clearTokens();
+  }
+}
+
+export function logoutLocal(): void {
   clearTokens();
 }

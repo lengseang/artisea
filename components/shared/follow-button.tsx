@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { UserPlus, UserCheck, Loader2 } from 'lucide-react';
+import { followAuthor, unfollowAuthor } from '@/lib/api/authors';
 
 interface FollowButtonProps {
   authorId: string;
@@ -28,10 +29,10 @@ export function FollowButton({
     setIsLoading(true);
     try {
       if (isFollowing) {
-        await onUnfollow?.(authorId);
+        await (onUnfollow ?? unfollowAuthor)(authorId);
         setIsFollowing(false);
       } else {
-        await onFollow?.(authorId);
+        await (onFollow ?? followAuthor)(authorId);
         setIsFollowing(true);
       }
     } catch (err) {

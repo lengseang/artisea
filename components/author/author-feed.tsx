@@ -1,98 +1,41 @@
 import { AuthorCard } from '@/components/author/author-card';
 import { AuthorCardSkeleton } from '@/components/ui/skeleton';
+import { getAuthors } from '@/lib/api/authors';
 import type { Author } from '@/types/author';
 
 interface AuthorFeedProps {
   feedType: string;
 }
 
-const MOCK_AUTHORS: Author[] = [
-  {
-    id: '1',
-    name: 'Jane Smith',
-    username: 'janesmith_writer',
-    bio: 'Award-winning journalist focusing on the intersection of technology and collaboration.',
-    avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jane',
-    cover_image_url: null,
-    location: 'San Francisco, CA',
-    social_links: null,
-    is_featured: true,
-    follower_count: 1240,
-    following_count: 89,
-    article_count: 34,
-  },
-  {
-    id: '2',
-    name: 'Alex Johnson',
-    username: 'alex_crafts',
-    bio: 'Writer and educator dedicated to helping new voices find their unique narrative style.',
-    avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex',
-    cover_image_url: null,
-    location: 'New York, NY',
-    social_links: null,
-    is_featured: true,
-    follower_count: 890,
-    following_count: 156,
-    article_count: 22,
-  },
-  {
-    id: '3',
-    name: 'Maria Chen',
-    username: 'mchen_reports',
-    bio: 'Digital native explorer of long-form narrative and investigative reporting.',
-    avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Maria',
-    cover_image_url: null,
-    location: 'London, UK',
-    social_links: null,
-    is_featured: false,
-    follower_count: 2100,
-    following_count: 43,
-    article_count: 67,
-  },
-];
-
-const MOCK_FOR_YOU: Author[] = [
-  {
-    id: '4',
-    name: 'Dev Team',
-    username: 'dev_central',
-    bio: 'A collective of engineers sharing insights on DevOps, CI/CD, and system architecture.',
-    avatar_url: 'https://api.dicebear.com/7.x/identicon/svg?seed=DevTeam',
-    cover_image_url: null,
-    location: null,
-    social_links: null,
-    is_featured: false,
-    follower_count: 560,
-    following_count: 12,
-    article_count: 18,
-  },
-  {
-    id: '5',
-    name: 'Backend Guru',
-    username: 'api_master',
-    bio: 'Specializing in scalable architecture, Node.js performance, and API security.',
-    avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Guru',
-    cover_image_url: null,
-    location: 'Berlin, Germany',
-    social_links: null,
-    is_featured: false,
-    follower_count: 340,
-    following_count: 78,
-    article_count: 11,
-  },
-];
-
-async function getAuthorsFromDatabase(type: string): Promise<Author[]> {
-  await new Promise((resolve) => setTimeout(resolve, 400));
-  if (type === 'featured') return MOCK_AUTHORS;
-  if (type === 'for-you') return MOCK_FOR_YOU;
-  return [];
+function toAuthorParams(feedType: string) {
+  return {
+    q: '',
+    limit: 20,
+    sort: feedType === 'featured' ? ('popular' as const) : ('latest' as const),
+  };
 }
 
 export async function AuthorFeed({ feedType }: Readonly<AuthorFeedProps>) {
-  const authors = await getAuthorsFromDatabase(feedType);
+  let authors: Author[] = [];
+  let errorMessage: string | null = null;
 
-  if (!authors || authors.length === 0) {
+  try {
+    const response = await getAuthors(toAuthorParams(feedType));
+    authors = response.data;
+  } catch (error) {
+    errorMessage =
+      error instanceof Error ? error.message : 'Unable to load authors from the API.';
+  }
+
+  if (errorMessage) {
+    return (
+      <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-300">
+        {errorMessage}
+      </div>
+    );
+  }
+
+  if (authors.length === 0) {
     return (
       <div className="py-12 text-center text-muted-foreground">
         No authors found for &ldquo;{feedType}&rdquo;.

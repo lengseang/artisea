@@ -11,6 +11,7 @@ import {
 } from 'react';
 import type { LoginRequest, RegisterRequest } from '@/types/api';
 import type { UserRole } from '@/types/user';
+import * as apiAuth from '@/lib/api/auth';
 
 // ─── Types ───────────────────────────────────────────────────
 interface AuthUser {
@@ -57,57 +58,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = useCallback(async (credentials: LoginRequest) => {
-    // Simulate delay for premium feel
-    await new Promise((resolve) => setTimeout(resolve, 800));
-
-    // Static validation for demo
-    if (credentials.email === 'bob@artisea.com' && credentials.password === 'password123') {
-      const authUser: AuthUser = {
-        id: 'u123',
-        email: 'bob@artisea.com',
-        username: 'bob_the_writer',
-        role: 'author' as UserRole,
-        display_name: 'Bob the Writer',
-        avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Bob',
-      };
-      setUser(authUser);
-      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(authUser));
-      return;
-    }
-
-    if (credentials.email === 'admin@artisea.com' && credentials.password === 'admin123') {
-      const authUser: AuthUser = {
-        id: 'u001',
-        email: 'admin@artisea.com',
-        username: 'admin',
-        role: 'admin' as UserRole,
-        display_name: 'ArtiSea Admin',
-        avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Admin',
-      };
-      setUser(authUser);
-      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(authUser));
-      return;
-    }
-
-    throw new Error('Invalid email or password. Hint: bob@artisea.com / password123');
+    const data = await apiAuth.login(credentials);
+    const authUser: AuthUser = {
+      id: data.user.id,
+      email: data.user.email,
+      username: data.user.username,
+      role: data.user.role,
+      display_name: data.user.profile.display_name,
+      avatar_url: data.user.profile.avatar_url,
+    };
+    setUser(authUser);
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(authUser));
   }, []);
 
   const register = useCallback(async (payload: RegisterRequest) => {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
+    const data = await apiAuth.register(payload);
     const authUser: AuthUser = {
-      id: `u${Math.floor(Math.random() * 1000)}`,
-      email: payload.email,
-      username: payload.username,
-      role: 'author' as UserRole,
-      display_name: payload.display_name,
-      avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${payload.username}`,
+      id: data.user.id,
+      email: data.user.email,
+      username: data.user.username,
+      role: data.user.role,
+      display_name: data.user.profile.display_name,
+      avatar_url: data.user.profile.avatar_url,
     };
     setUser(authUser);
     localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(authUser));
   }, []);
 
   const logout = useCallback(() => {
+    apiAuth.logout();
     setUser(null);
     localStorage.removeItem(USER_STORAGE_KEY);
   }, []);

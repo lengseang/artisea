@@ -1,9 +1,12 @@
 'use client';
 
 import { Heart, MessageCircle, Bookmark, Share2 } from 'lucide-react';
+import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { interactWithArticle, removeInteraction } from '@/lib/api/interactions';
 
 interface InteractionBarProps {
+  articleId?: string;
   likeCount: number;
   commentCount: number;
   saveCount: number;
@@ -24,6 +27,7 @@ function formatCount(n: number): string {
 }
 
 export function InteractionBar({
+  articleId,
   likeCount,
   commentCount,
   saveCount,
@@ -36,6 +40,76 @@ export function InteractionBar({
   onShare,
   className,
 }: Readonly<InteractionBarProps>) {
+  const [liked, setLiked] = useState(isLiked);
+  const [saved, setSaved] = useState(isSaved);
+  const [likes, setLikes] = useState(likeCount);
+  const [saves, setSaves] = useState(saveCount);
+  const [isBusy, setIsBusy] = useState(false);
+
+  const handleLike = async () => {
+    if (onLike) {
+      onLike();
+      return;
+    }
+    if (!articleId || isBusy) return;
+
+    setIsBusy(true);
+    const nextLiked = !liked;
+    setLiked(nextLiked);
+    setLikes((current) => current + (nextLiked ? 1 : -1));
+    try {
+      if (nextLiked) {
+        await interactWithArticle(articleId, { type: 'like' });
+      } else {
+        await removeInteraction(articleId, 'like');
+      }
+    } catch {
+      setLiked(!nextLiked);
+      setLikes((current) => current + (nextLiked ? -1 : 1));
+    } finally {
+      setIsBusy(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (onSave) {
+      onSave();
+      return;
+    }
+    if (!articleId || isBusy) return;
+
+    setIsBusy(true);
+    const nextSaved = !saved;
+    setSaved(nextSaved);
+    setSaves((current) => current + (nextSaved ? 1 : -1));
+    try {
+      if (nextSaved) {
+        await interactWithArticle(articleId, { type: 'save' });
+      } else {
+        await removeInteraction(articleId, 'save');
+      }
+    } catch {
+      setSaved(!nextSaved);
+      setSaves((current) => current + (nextSaved ? -1 : 1));
+    } finally {
+      setIsBusy(false);
+    }
+  };
+
+  const handleShare = async () => {
+    if (onShare) {
+      onShare();
+      return;
+    }
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      await navigator.share({ url: window.location.href }).catch(() => undefined);
+      return;
+    }
+    if (typeof navigator !== 'undefined') {
+      await navigator.clipboard?.writeText(window.location.href).catch(() => undefined);
+    }
+  };
+
   return (
     <div
       className={cn(
@@ -57,23 +131,24 @@ export function InteractionBar({
         </button>
 
         <button
-          onClick={onLike}
+          onClick={handleLike}
+          disabled={isBusy}
           className={cn(
             'group/btn flex items-center gap-1.5 transition-colors',
-            isLiked
+            liked
               ? 'text-pink-600 dark:text-pink-400'
               : 'hover:text-pink-600 dark:hover:text-pink-400'
           )}
-          aria-label={isLiked ? 'Unlike' : 'Like'}
+          aria-label={liked ? 'Unlike' : 'Like'}
         >
           <Heart
             className={cn(
               'h-[18px] w-[18px] transition-transform group-hover/btn:scale-110',
-              isLiked && 'fill-current'
+              liked && 'fill-current'
             )}
           />
-          {likeCount > 0 && (
-            <span className="text-xs">{formatCount(likeCount)}</span>
+          {likes > 0 && (
+            <span className="text-xs">{formatCount(likes)}</span>
           )}
         </button>
       </div>
@@ -81,28 +156,29 @@ export function InteractionBar({
       {/* Right group: save + share */}
       <div className="flex items-center gap-5">
         <button
-          onClick={onSave}
+          onClick={handleSave}
+          disabled={isBusy}
           className={cn(
             'group/btn transition-colors',
-            isSaved
+            saved
               ? 'text-amber-600 dark:text-amber-400'
               : 'hover:text-amber-600 dark:hover:text-amber-400'
           )}
-          aria-label={isSaved ? 'Unsave' : 'Save'}
+          aria-label={saved ? 'Unsave' : 'Save'}
         >
           <Bookmark
             className={cn(
               'h-[18px] w-[18px] transition-transform group-hover/btn:scale-110',
-              isSaved && 'fill-current'
+              saved && 'fill-current'
             )}
           />
-          {saveCount > 0 && (
-            <span className="sr-only">{formatCount(saveCount)} saves</span>
+          {saves > 0 && (
+            <span className="sr-only">{formatCount(saves)} saves</span>
           )}
         </button>
 
         <button
-          onClick={onShare}
+          onClick={handleShare}
           className="group/btn transition-colors hover:text-blue-600 dark:hover:text-blue-400"
           aria-label="Share"
         >

@@ -1,17 +1,24 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Avatar } from '@/components/ui/avatar';
 import { PageHeader } from '@/components/shared/page-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/components/providers/auth-provider';
 import { Camera, MapPin, Link as LinkIcon, Loader2 } from 'lucide-react';
 import { SocialLayout } from '@/components/layout/social-layout';
+import { getMyProfile, updateMyProfile } from '@/lib/api/authors';
 
 export default function ProfilePage() {
   const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [stats, setStats] = useState({
+    followers: 0,
+    following: 0,
+    articles: 0,
+  });
   const [formData, setFormData] = useState({
     display_name: user?.display_name ?? '',
     bio: 'Passionate writer exploring technology and culture.',
@@ -19,14 +26,45 @@ export default function ProfilePage() {
     website: 'https://example.com',
   });
 
+  useEffect(() => {
+    getMyProfile()
+      .then((profile) => {
+        setFormData({
+          display_name: profile.name,
+          bio: profile.bio ?? '',
+          location: profile.location ?? '',
+          website: profile.social_links?.website ?? '',
+        });
+        setStats({
+          followers: profile.follower_count,
+          following: profile.following_count,
+          articles: profile.article_count,
+        });
+      })
+      .catch((error) => {
+        setErrorMessage(error instanceof Error ? error.message : 'Unable to load profile.');
+      });
+  }, []);
+
   const updateField = (field: string, value: string) =>
     setFormData((prev) => ({ ...prev, [field]: value }));
 
   const handleSave = async () => {
     setIsSaving(true);
-    await new Promise((r) => setTimeout(r, 800));
-    setIsSaving(false);
-    setIsEditing(false);
+    setErrorMessage(null);
+    try {
+      await updateMyProfile({
+        display_name: formData.display_name,
+        bio: formData.bio,
+        location: formData.location,
+        social_links: formData.website ? { website: formData.website } : undefined,
+      });
+      setIsEditing(false);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to save profile.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const inputCls = 'w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-50';
@@ -41,6 +79,12 @@ export default function ProfilePage() {
             {isEditing ? (isSaving ? 'Saving…' : 'Save Changes') : 'Edit Profile'}
           </button>
         } />
+
+        {errorMessage && (
+          <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-300">
+            {errorMessage}
+          </div>
+        )}
         
         <div className="space-y-6">
           <Card className="border-zinc-200 dark:border-zinc-800 shadow-sm">
@@ -53,9 +97,9 @@ export default function ProfilePage() {
                 <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-50">{user?.display_name ?? 'Your Name'}</h2>
                 <p className="text-sm text-zinc-500">@{user?.username ?? 'username'}</p>
                 <div className="flex gap-4 mt-3 text-sm">
-                  <span><strong className="text-zinc-900 dark:text-zinc-50">1,240</strong> <span className="text-zinc-500 font-medium">followers</span></span>
-                  <span><strong className="text-zinc-900 dark:text-zinc-50">89</strong> <span className="text-zinc-500 font-medium">following</span></span>
-                  <span><strong className="text-zinc-900 dark:text-zinc-50">34</strong> <span className="text-zinc-500 font-medium">articles</span></span>
+                  <span><strong className="text-zinc-900 dark:text-zinc-50">{stats.followers.toLocaleString()}</strong> <span className="text-zinc-500 font-medium">followers</span></span>
+                  <span><strong className="text-zinc-900 dark:text-zinc-50">{stats.following.toLocaleString()}</strong> <span className="text-zinc-500 font-medium">following</span></span>
+                  <span><strong className="text-zinc-900 dark:text-zinc-50">{stats.articles}</strong> <span className="text-zinc-500 font-medium">articles</span></span>
                 </div>
               </div>
             </CardContent>

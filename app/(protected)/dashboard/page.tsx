@@ -1,16 +1,14 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useEffect, useState, Suspense, type ComponentType, type SVGProps } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   PenSquare, 
   Eye, 
   Heart, 
-  Users, 
   FileText, 
   Trash2, 
   Edit3, 
-  ShieldCheck 
 } from 'lucide-react';
 import { useAuth } from '@/components/providers/auth-provider';
 import { AgentView } from '@/components/dashboard/agent-view';
@@ -21,6 +19,9 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { deleteArticle, getMyDraftArticles } from '@/lib/api/articles';
+import { getAuthorArticles } from '@/lib/api/authors';
+import type { Article } from '@/types/article';
 
 interface DashboardArticle {
   id: string;
@@ -31,36 +32,6 @@ interface DashboardArticle {
   view_count: number;
   like_count: number;
 }
-
-const MOCK_ARTICLES: DashboardArticle[] = [
-  {
-    id: '1',
-    title: 'The Future of Collaborative Writing',
-    status: 'published',
-    date: '2024-03-15',
-    excerpt: 'How modern tools are reshaping the way writers work together.',
-    view_count: 1240,
-    like_count: 48,
-  },
-  {
-    id: '2',
-    title: 'On Craft: Finding Your Voice',
-    status: 'draft',
-    date: '2024-03-20',
-    excerpt: 'Practical exercises to help you discover your unique style.',
-    view_count: 0,
-    like_count: 0,
-  },
-  {
-    id: '3',
-    title: 'Long-form Journalism in the Digital Age',
-    status: 'published',
-    date: '2024-03-10',
-    excerpt: 'Exploring the resurgence of deep narrative-driven reporting.',
-    view_count: 2100,
-    like_count: 92,
-  },
-];
 
 const STATUS_BADGE_MAP: Record<DashboardArticle['status'], 'success' | 'warning' | 'muted'> = {
   published: 'success',
@@ -74,6 +45,18 @@ const TAB_ITEMS = [
   { value: 'draft', label: 'Drafts' },
   { value: 'archived', label: 'Archived' },
 ];
+
+function toDashboardArticle(article: Article): DashboardArticle {
+  return {
+    id: article.id,
+    title: article.title,
+    status: article.status === 'published' ? 'published' : article.status === 'archived' ? 'archived' : 'draft',
+    date: article.published_at ?? article.updated_at ?? article.created_at,
+    excerpt: article.excerpt ?? '',
+    view_count: article.view_count,
+    like_count: article.like_count,
+  };
+}
 
 export default function DashboardPage() {
   return (
@@ -91,10 +74,48 @@ function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
-  const [articles, setArticles] = useState<DashboardArticle[]>([...MOCK_ARTICLES]);
+  const [articles, setArticles] = useState<DashboardArticle[]>([]);
   const [activeTab, setActiveTab] = useState('all');
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const isAgentView = user?.role === 'agent' && searchParams.get('view') === 'agent';
+
+  useEffect(() => {
+    if (!user?.id || isAgentView) {
+      return;
+    }
+
+    let cancelled = false;
+    const loadingTimer = window.setTimeout(() => {
+      setIsLoading(true);
+      setErrorMessage(null);
+    }, 0);
+
+    Promise.all([
+      getMyDraftArticles().then((res) => res.data).catch(() => []),
+      getAuthorArticles(user.id).then((res) => res.data).catch(() => []),
+    ])
+      .then(([drafts, published]) => {
+        if (cancelled) return;
+        const byId = new Map<string, Article>();
+        [...drafts, ...published].forEach((article) => byId.set(article.id, article));
+        setArticles(Array.from(byId.values()).map(toDashboardArticle));
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          setErrorMessage(error instanceof Error ? error.message : 'Unable to load dashboard.');
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(loadingTimer);
+    };
+  }, [isAgentView, user?.id]);
 
   const filteredArticles =
     activeTab === 'all' ? articles : articles.filter((a) => a.status === activeTab);
@@ -104,8 +125,12 @@ function DashboardContent() {
   const publishedCount = articles.filter((a) => a.status === 'published').length;
   const draftCount = articles.filter((a) => a.status === 'draft').length;
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this article?')) {
+      await deleteArticle(id).catch((error) => {
+        setErrorMessage(error instanceof Error ? error.message : 'Unable to delete article.');
+        throw error;
+      });
       setArticles((prev) => prev.filter((a) => a.id !== id));
     }
   };
@@ -115,8 +140,8 @@ function DashboardContent() {
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
           <PageHeader
-            title={isAgentView ? 'Agent Manager' : 'Dashboard'}
-            description={isAgentView ? 'Manage assigned authors and verify content.' : 'Manage your articles and track performance.'}
+            title={isAgentView ? 'Agent Workspace' : 'Dashboard'}
+            description={isAgentView ? 'Plan, review, and approve agent-assisted work before publish.' : 'Manage your articles and track performance.'}
             className="mb-0"
           />
           
@@ -161,6 +186,12 @@ function DashboardContent() {
         ) : (
           <div className="space-y-8">
             {/* Stats Grid */}
+            {errorMessage && (
+              <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-300">
+                {errorMessage}
+              </div>
+            )}
+
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <StatCard icon={FileText} label="Published" value={publishedCount} />
               <StatCard icon={Edit3} label="Drafts" value={draftCount} />
@@ -173,7 +204,9 @@ function DashboardContent() {
 
             {/* Articles List */}
             <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm overflow-hidden">
-              {filteredArticles.length === 0 ? (
+              {isLoading ? (
+                <div className="p-8 text-center text-sm text-zinc-500">Loading articles...</div>
+              ) : filteredArticles.length === 0 ? (
                 <EmptyState
                   icon={FileText}
                   title="No articles here"
@@ -250,7 +283,7 @@ function StatCard({
   label,
   value,
 }: {
-  icon: any;
+  icon: ComponentType<SVGProps<SVGSVGElement>>;
   label: string;
   value: number;
 }) {

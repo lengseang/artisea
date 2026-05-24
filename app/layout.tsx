@@ -1,12 +1,15 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Roboto_Serif } from 'next/font/google';
 import './globals.css';
 import { Navbar } from '@/components/layout/navbar';
 import { Providers } from '@/components/providers/providers';
 
-const inter = Inter({
+const robotoSerif = Roboto_Serif({
   subsets: ['latin'],
-  variable: '--font-inter',
+  variable: '--font-roboto-serif',
+  weight: ['300', '400', '500', '600', '700'],
+  style: ['normal', 'italic'],
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -24,7 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${inter.variable} font-sans antialiased bg-zinc-50 dark:bg-zinc-950`}
+        className={`${robotoSerif.variable} font-sans antialiased bg-zinc-50 dark:bg-zinc-950`}
       >
         <Providers>
           <div className="flex min-h-screen flex-col">

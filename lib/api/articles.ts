@@ -4,8 +4,10 @@
  */
 
 import { apiClient } from '@/lib/api-client';
+import { API_ENDPOINTS } from '@/lib/api/endpoints';
+import { normalizeArticle, toPaginatedResponse, unwrapData } from '@/lib/api/normalizers';
 import type { Article } from '@/types/article';
-import type { PaginatedResponse, ApiResponse } from '@/types/common';
+import type { PaginatedResponse } from '@/types/common';
 import type {
   ArticleCreateRequest,
   ArticleUpdateRequest,
@@ -22,49 +24,80 @@ export async function getArticles(
       .map(([k, v]) => [k, String(v)])
   ).toString() : '';
 
-  return apiClient<PaginatedResponse<Article>>(`/articles${query}`, { public: true });
+  const res = await apiClient<unknown>(`${API_ENDPOINTS.articles.list}${query}`, {
+    public: true,
+  });
+  return toPaginatedResponse<Article>(res, normalizeArticle);
 }
 
 export async function getArticleBySlug(slug: string): Promise<Article> {
-  const res = await apiClient<ApiResponse<Article>>(`/articles/${slug}`, { public: true });
-  return res.data;
+  const res = await apiClient<unknown>(API_ENDPOINTS.articles.bySlug(slug), {
+    public: true,
+  });
+  return normalizeArticle(unwrapData(res));
 }
 
 export async function getArticleById(id: string): Promise<Article> {
-  const res = await apiClient<ApiResponse<Article>>(`/articles/${id}`);
-  return res.data;
+  const res = await apiClient<unknown>(API_ENDPOINTS.articles.byId(id));
+  return normalizeArticle(unwrapData(res));
 }
 
 export async function createArticle(payload: ArticleCreateRequest): Promise<Article> {
-  const res = await apiClient<ApiResponse<Article>>('/articles', {
+  const res = await apiClient<unknown>(API_ENDPOINTS.articles.list, {
     method: 'POST',
     body: payload,
   });
-  return res.data;
+  return normalizeArticle(unwrapData(res));
 }
 
 export async function updateArticle(
   id: string,
   payload: ArticleUpdateRequest
 ): Promise<Article> {
-  const res = await apiClient<ApiResponse<Article>>(`/articles/${id}`, {
-    method: 'PUT',
+  const res = await apiClient<unknown>(API_ENDPOINTS.articles.byId(id), {
+    method: 'PATCH',
     body: payload,
   });
-  return res.data;
+  return normalizeArticle(unwrapData(res));
 }
 
 export async function updateArticleStatus(
   id: string,
   payload: ArticleStatusRequest
 ): Promise<Article> {
-  const res = await apiClient<ApiResponse<Article>>(`/articles/${id}/status`, {
-    method: 'PATCH',
-    body: payload,
+  if (payload.status !== 'published') {
+    const res = await apiClient<unknown>(API_ENDPOINTS.articles.byId(id), {
+      method: 'PATCH',
+      body: payload,
+    });
+    return normalizeArticle(unwrapData(res));
+  }
+
+  const res = await apiClient<unknown>(API_ENDPOINTS.articles.publish(id), {
+    method: 'POST',
   });
-  return res.data;
+  return normalizeArticle(unwrapData(res));
 }
 
 export async function deleteArticle(id: string): Promise<void> {
-  await apiClient<void>(`/articles/${id}`, { method: 'DELETE' });
+  await apiClient<void>(API_ENDPOINTS.articles.byId(id), { method: 'DELETE' });
+}
+
+export async function getMyDraftArticles(): Promise<PaginatedResponse<Article>> {
+  const res = await apiClient<unknown>(API_ENDPOINTS.articles.drafts);
+  return toPaginatedResponse<Article>(res, normalizeArticle);
+}
+
+export async function publishArticle(id: string): Promise<Article> {
+  const res = await apiClient<unknown>(API_ENDPOINTS.articles.publish(id), {
+    method: 'POST',
+  });
+  return normalizeArticle(unwrapData(res));
+}
+
+export async function recordArticleView(id: string): Promise<void> {
+  await apiClient<void>(API_ENDPOINTS.articles.view(id), {
+    method: 'POST',
+    public: true,
+  });
 }

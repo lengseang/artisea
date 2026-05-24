@@ -4,34 +4,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { useDebounce } from '@/lib/hooks/use-debounce';
-import { ImagePlus, Tag, Globe, Lock, EyeOff, Save, Loader2, UserCircle } from 'lucide-react';
+import { Tag, Globe, Lock, EyeOff, UserCircle, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/components/providers/auth-provider';
-
-
-interface PublicationItem {
-  id: string;
-  title: string;
-  excerpt: string;
-  content: string;
-  status: 'published' | 'draft';
-}
-
-const PUBLICATIONS_DATA: PublicationItem[] = [
-  {
-    id: '1',
-    title: 'The Future of Collaborative Writing',
-    excerpt: 'How modern tools are reshaping the way writers work together.',
-    content: '',
-    status: 'published',
-  },
-  {
-    id: '2',
-    title: 'On Craft: Finding Your Voice',
-    excerpt: 'Practical exercises to help you discover your unique style.',
-    content: '',
-    status: 'draft',
-  },
-];
+import { createArticle, getArticleById, publishArticle, updateArticle } from '@/lib/api/articles';
+import { RichTextEditor } from '@/components/editor/rich-text-editor';
+import { UnifiedEditorBar, type SaveStatus } from '@/components/editor/unified-editor-bar';
+import { extractFirstImageUrl } from '@/lib/media-util';
+import type { Editor } from '@tiptap/react';
 
 const VISIBILITY_OPTIONS = [
   { value: 'public', label: 'Public', icon: Globe },
@@ -39,241 +18,274 @@ const VISIBILITY_OPTIONS = [
   { value: 'private', label: 'Private', icon: Lock },
 ] as const;
 
-const MOCK_ASSIGNED_AUTHORS = [
-  { id: 'a1', name: 'John Doe', username: 'johndoe' },
-  { id: 'a2', name: 'Jane Smith', username: 'janesmith' },
-  { id: 'a3', name: 'Robert Brown', username: 'rbrown' },
-];
-
 function WriteEditor() {
   const { user } = useAuth();
   const router = useRouter();
-
   const searchParams = useSearchParams();
+
+  // ✅ useState (not useRef) so toolbar re-renders when editor mounts
+  const [editorInstance, setEditorInstance] = useState<Editor | null>(null);
+
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [excerpt, setExcerpt] = useState('');
   const [tags, setTags] = useState('');
   const [visibility, setVisibility] = useState<'public' | 'unlisted' | 'private'>('public');
-  const [selectedOwnerId, setSelectedOwnerId] = useState<string>('');
-  const [isSaving, setIsSaving] = useState(false);
-  const [lastSaved, setLastSaved] = useState<string | null>(null);
+  const [articleId, setArticleId] = useState<string | null>(null);
+  const [coverImage, setCoverImage] = useState<string | undefined>();
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
   const [showSettings, setShowSettings] = useState(false);
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
 
-  // Initialize selectedOwnerId to self or first assigned author
-  useEffect(() => {
-    if (user?.role === 'agent') {
-      setSelectedOwnerId(MOCK_ASSIGNED_AUTHORS[0].id);
-    } else {
-      setSelectedOwnerId(user?.id || '');
-    }
-  }, [user]);
+  const debouncedContent = useDebounce(content, 1500);
+  const debouncedTitle = useDebounce(title, 1500);
 
-
-  // Auto-save with debounce
-  const debouncedContent = useDebounce(content, 2000);
-  const debouncedTitle = useDebounce(title, 2000);
-
-  // Hydrate from query param
+  // Load existing article on mount
   useEffect(() => {
     const id = searchParams.get('id');
-    if (id) {
-      const found = PUBLICATIONS_DATA.find((p) => p.id === id);
-      if (found) {
-        setTitle(found.title);
-        setContent(found.content);
-        setExcerpt(found.excerpt);
-      }
-    }
+    if (!id) return;
+    getArticleById(id)
+      .then((article) => {
+        setArticleId(id);
+        setTitle(article.title);
+        const c = article.content ?? article.content_text ?? '';
+        setContent(typeof c === 'object' ? JSON.stringify(c) : String(c));
+        setExcerpt(article.excerpt ?? '');
+        setVisibility(article.visibility ?? 'public');
+        setCoverImage(article.cover_image ?? undefined);
+        setTags(article.tags?.map((t: { name: string }) => t.name).join(', ') ?? '');
+      })
+      .catch((err) =>
+        setErrorMessage(err instanceof Error ? err.message : 'Unable to load article.')
+      );
   }, [searchParams]);
 
-  // Auto-save effect
-  const handleAutoSave = useCallback(() => {
+  // Core save function — always reads latest state via closure params
+  const saveArticle = useCallback(
+    async (opts?: { title?: string; content?: string }): Promise<{ id: string } | null> => {
+      const t = opts?.title ?? title;
+      const c = opts?.content ?? content;
+      if (!t.trim() && !c) return null;
+
+      setSaveStatus('saving');
+      try {
+        const payload = {
+          title: t,
+          content: c,
+          excerpt,
+          cover_image: coverImage,
+          tags: tags
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean),
+          visibility,
+        };
+        let article;
+        if (articleId) {
+          article = await updateArticle(articleId, payload);
+        } else {
+          article = await createArticle(payload);
+          setArticleId(article.id);
+        }
+        setSaveStatus('saved');
+        setTimeout(() => setSaveStatus('idle'), 2500);
+        return article;
+      } catch {
+        setSaveStatus('error');
+        setTimeout(() => setSaveStatus('idle'), 3000);
+        return null;
+      }
+    },
+    [articleId, content, coverImage, excerpt, tags, title, visibility]
+  );
+
+  // Auto-save when debounced values change
+  useEffect(() => {
     if (!debouncedTitle && !debouncedContent) return;
-    setLastSaved(new Date().toLocaleTimeString());
+    if (!articleId && !debouncedTitle.trim()) return;
+    void saveArticle({ title: debouncedTitle, content: debouncedContent });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedTitle, debouncedContent]);
 
-  useEffect(() => {
-    handleAutoSave();
-  }, [handleAutoSave]);
-
+  // Publish handler
   const handlePublish = async () => {
-    setIsSaving(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    console.log('Published:', { title, content, excerpt, tags, visibility });
-    setIsSaving(false);
-    router.push('/dashboard');
+    setIsPublishing(true);
+    setErrorMessage(null);
+    try {
+      const draft = await saveArticle();
+      if (!draft) throw new Error('Save failed before publish.');
+      await publishArticle(draft.id);
+      router.push('/dashboard');
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : 'Unable to publish article.');
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
-  const handleSaveDraft = async () => {
-    setIsSaving(true);
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    setLastSaved(new Date().toLocaleTimeString());
-    setIsSaving(false);
-  };
+  // Ctrl+S shortcut
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        void saveArticle();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [saveArticle]);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Toolbar */}
-      <header className="sticky top-0 z-30 border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm px-4 sm:px-8 py-3 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.back()}
-            className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50 transition-colors"
-          >
-            ← Cancel
-          </button>
-          {lastSaved && (
-            <span className="hidden sm:flex items-center gap-1 text-xs text-zinc-400">
-              <Save className="h-3 w-3" />
-              Saved {lastSaved}
-            </span>
-          )}
-        </div>
+    <div className="h-screen flex flex-col overflow-hidden bg-[#f0f0f0] dark:bg-zinc-950">
+      {/* ── Unified single-row editor bar ── */}
+      <UnifiedEditorBar
+        editor={editorInstance}
+        title={title}
+        saveStatus={saveStatus}
+        isPreviewMode={isPreviewMode}
+        showSettings={showSettings}
+        isPublishing={isPublishing}
+        canPublish={!!title.trim()}
+        onBack={() => router.back()}
+        onForward={() => router.forward()}
+        onTogglePreview={() => setIsPreviewMode((v) => !v)}
+        onToggleSettings={() => setShowSettings((v) => !v)}
+        onSave={() => void saveArticle()}
+        onPublish={handlePublish}
+      />
 
-        <div className="flex items-center gap-2">
+      {/* Error banner */}
+      {errorMessage && (
+        <div className="flex-none flex items-center gap-2 border-b border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-300">
+          <AlertCircle className="h-4 w-4 flex-none" />
+          {errorMessage}
           <button
-            onClick={() => setShowSettings(!showSettings)}
-            className="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 px-3 py-2 text-sm font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+            onClick={() => setErrorMessage(null)}
+            className="ml-auto text-red-400 hover:text-red-600 font-bold text-base leading-none"
           >
-            Settings
-          </button>
-          <button
-            onClick={handleSaveDraft}
-            disabled={isSaving}
-            className="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors disabled:opacity-50"
-          >
-            Save Draft
-          </button>
-          <button
-            onClick={handlePublish}
-            disabled={isSaving || !title.trim()}
-            className="inline-flex items-center gap-2 rounded-xl bg-zinc-900 dark:bg-zinc-50 text-zinc-50 dark:text-zinc-900 px-4 py-2 text-sm font-semibold hover:opacity-80 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
-            Publish
+            ✕
           </button>
         </div>
-      </header>
+      )}
 
-      <div className="flex flex-1">
-        {/* Editor */}
-        <main className="flex-1 mx-auto w-full max-w-2xl py-12 px-4 sm:px-6 flex flex-col gap-6">
-          {/* Cover image area */}
-          <button className="group flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-zinc-200 dark:border-zinc-800 h-48 text-zinc-400 hover:border-zinc-400 hover:text-zinc-600 dark:hover:border-zinc-600 dark:hover:text-zinc-400 transition-colors">
-            <ImagePlus className="h-6 w-6" />
-            <span className="text-sm font-medium">Add cover image</span>
-          </button>
+      {/* Body row */}
+      <div className="flex flex-1 overflow-hidden relative">
+        {/* Editor canvas */}
+        <RichTextEditor
+          title={title}
+          onChangeTitle={setTitle}
+          content={content}
+          onChange={(jsonStr, text) => {
+            setContent(jsonStr);
+            const extracted = extractFirstImageUrl(jsonStr);
+            if (extracted) setCoverImage(extracted);
+          }}
+          isPreviewMode={isPreviewMode}
+          onEditorReady={(ed) => setEditorInstance(ed)}
+        />
 
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Article title…"
-            className="w-full text-4xl font-bold text-zinc-900 dark:text-zinc-50 bg-transparent border-none outline-none placeholder-zinc-300 dark:placeholder-zinc-700"
-          />
-
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="Tell your story…"
-            rows={20}
-            className="w-full flex-1 text-lg leading-8 text-zinc-700 dark:text-zinc-300 bg-transparent border-none outline-none placeholder-zinc-300 dark:placeholder-zinc-700 resize-none"
-          />
-        </main>
-
-        {/* Settings panel */}
+        {/* Settings sidebar */}
         {showSettings && (
-          <aside className="w-80 border-l border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 p-6 space-y-6 overflow-y-auto">
-            <h3 className="font-semibold text-zinc-900 dark:text-zinc-50">
-              Article Settings
-            </h3>
-
-            {/* Author Selection (Agent Only) */}
-            {user?.role === 'agent' && (
-              <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/20">
-                <label className="block text-sm font-semibold text-amber-900 dark:text-amber-400 mb-2 flex items-center gap-1.5">
-                  <UserCircle className="h-4 w-4" />
-                  Publication Author
-                </label>
-                <select
-                  value={selectedOwnerId}
-                  onChange={(e) => setSelectedOwnerId(e.target.value)}
-                  className="w-full rounded-xl border border-amber-200 dark:border-amber-900/30 bg-white dark:bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
-                >
-                  {MOCK_ASSIGNED_AUTHORS.map(author => (
-                    <option key={author.id} value={author.id}>
-                      {author.name} (@{author.username})
-                    </option>
-                  ))}
-                </select>
-                <p className="text-[10px] text-amber-600/70 dark:text-amber-400/50 mt-2 italic">
-                  * Publishing as an Agent on behalf of an offline owner.
-                </p>
-              </div>
-            )}
-
-
-            {/* Excerpt */}
-            <div>
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
-                Excerpt
-              </label>
-              <textarea
-                value={excerpt}
-                onChange={(e) => setExcerpt(e.target.value)}
-                placeholder="A short summary of your article…"
-                rows={3}
-                className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-50"
-              />
+          <aside className="absolute right-0 top-0 bottom-0 z-20 w-72 border-l border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex flex-col flex-none overflow-y-auto shadow-2xl md:shadow-none md:static">
+            <div className="p-4 border-b border-zinc-100 dark:border-zinc-800">
+              <h3 className="font-semibold text-sm text-zinc-900 dark:text-zinc-50">
+                Article Settings
+              </h3>
+              <p className="text-[10px] text-zinc-400 mt-0.5">Ctrl+S saves anytime</p>
             </div>
 
-            {/* Tags */}
-            <div>
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
-                <Tag className="inline h-3.5 w-3.5 mr-1" />
-                Tags
-              </label>
-              <input
-                value={tags}
-                onChange={(e) => setTags(e.target.value)}
-                placeholder="writing, craft, journalism"
-                className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-50"
-              />
-              <p className="text-xs text-zinc-400 mt-1">Separate with commas</p>
-            </div>
-
-            {/* Visibility */}
-            <div>
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
-                Visibility
-              </label>
-              <div className="space-y-2">
-                {VISIBILITY_OPTIONS.map((opt) => (
-                  <label
-                    key={opt.value}
-                    className={`flex items-center gap-3 rounded-xl border p-3 cursor-pointer transition-colors ${
-                      visibility === opt.value
-                        ? 'border-zinc-900 dark:border-zinc-50 bg-zinc-50 dark:bg-zinc-800'
-                        : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="visibility"
-                      value={opt.value}
-                      checked={visibility === opt.value}
-                      onChange={() => setVisibility(opt.value)}
-                      className="sr-only"
-                    />
-                    <opt.icon className="h-4 w-4 text-zinc-500" />
-                    <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                      {opt.label}
-                    </span>
+            <div className="p-4 space-y-5 flex-1">
+              {/* Cover preview */}
+              {coverImage && (
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                    Cover Image
                   </label>
-                ))}
+                  <div className="rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-800 aspect-video bg-zinc-100 dark:bg-zinc-900">
+                    <img src={coverImage} alt="Cover" className="w-full h-full object-cover" />
+                  </div>
+                  <p className="text-[10px] text-zinc-400 italic">
+                    Auto-extracted from first image in document.
+                  </p>
+                </div>
+              )}
+
+              {/* Excerpt */}
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                  Excerpt
+                </label>
+                <textarea
+                  value={excerpt}
+                  onChange={(e) => setExcerpt(e.target.value)}
+                  placeholder="A short summary…"
+                  rows={3}
+                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-zinc-400 transition-shadow"
+                />
               </div>
+
+              {/* Tags */}
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider flex items-center gap-1">
+                  <Tag className="h-3 w-3" /> Tags
+                </label>
+                <input
+                  value={tags}
+                  onChange={(e) => setTags(e.target.value)}
+                  placeholder="writing, craft, journalism"
+                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-400 transition-shadow"
+                />
+                <p className="text-[10px] text-zinc-400">Separate with commas</p>
+              </div>
+
+              {/* Visibility */}
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                  Visibility
+                </label>
+                <div className="space-y-1.5">
+                  {VISIBILITY_OPTIONS.map((opt) => (
+                    <label
+                      key={opt.value}
+                      className={`flex items-center gap-2.5 rounded-lg border p-2.5 cursor-pointer transition-all text-sm ${
+                        visibility === opt.value
+                          ? 'border-zinc-900 dark:border-zinc-200 bg-zinc-50 dark:bg-zinc-800 font-medium'
+                          : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="visibility"
+                        value={opt.value}
+                        checked={visibility === opt.value}
+                        onChange={() => setVisibility(opt.value)}
+                        className="sr-only"
+                      />
+                      <opt.icon className="h-4 w-4 text-zinc-500 flex-none" />
+                      <span className="text-zinc-700 dark:text-zinc-300">{opt.label}</span>
+                      {visibility === opt.value && (
+                        <CheckCircle2 className="h-3.5 w-3.5 ml-auto text-zinc-900 dark:text-zinc-200" />
+                      )}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Agent info */}
+              {user?.role === 'agent' && (
+                <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/20">
+                  <label className="block text-[10px] font-bold text-amber-800 dark:text-amber-400 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                    <UserCircle className="h-3.5 w-3.5" /> Publication Author
+                  </label>
+                  <input
+                    value={user?.id ?? ''}
+                    readOnly
+                    className="w-full rounded-lg border border-amber-200 dark:border-amber-900/30 bg-white dark:bg-zinc-800 px-2.5 py-1.5 text-xs focus:outline-none"
+                  />
+                </div>
+              )}
             </div>
           </aside>
         )}
@@ -286,8 +298,9 @@ export default function WritePage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center text-zinc-400">
-          Loading editor…
+        <div className="flex h-screen items-center justify-center text-zinc-400 gap-3">
+          <Loader2 className="h-5 w-5 animate-spin" />
+          <span className="text-sm">Loading editor…</span>
         </div>
       }
     >
